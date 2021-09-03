@@ -1,8 +1,8 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"time"
 	"traineeProject/handler"
@@ -10,7 +10,7 @@ import (
 
 func main(){
 	start := time.Now()
-	var db *sql.DB
+	var db *gorm.DB
 	var postsBytes []byte
 	var postsStrings []string
 	var posts []handler.Post

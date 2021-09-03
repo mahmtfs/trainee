@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
@@ -43,10 +44,9 @@ func ParsePost(postStr string, posts *[]Post) {
 	*posts = append(*posts, post)
 }
 
-func PostsToDB(posts []Post, db *sql.DB){
+func PostsToDB(posts []Post, db *gorm.DB){
 	for i := range posts {
-		_, err := db.Query("INSERT INTO posts VALUES (?, ?, ?, ?)",
+		db.Exec("INSERT INTO posts VALUES (?, ?, ?, ?)",
 			posts[i].ID, posts[i].UserID, posts[i].Title, posts[i].Body)
-		HandleError(err)
 	}
 }

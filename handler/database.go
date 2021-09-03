@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
 	"os"
 )
@@ -13,16 +13,12 @@ func HandleError(err error){
 	}
 }
 
-func GetDB(db **sql.DB){
+func GetDB(db **gorm.DB){
 	err := godotenv.Load()
 	HandleError(err)
-	*db, err = sql.Open(os.Getenv("DbDriver"), os.Getenv("DataSource"))
+	*db, err = gorm.Open(os.Getenv("DbDriver"), os.Getenv("DataSource"))
 	HandleError(err)
 	dbr := *db
-	err = dbr.Ping()
-	HandleError(err)
-	_, err = dbr.Query("DELETE FROM posts;")
-	HandleError(err)
-	_, err = dbr.Query("DELETE FROM comments;")
-	HandleError(err)
+	dbr.Exec("DELETE FROM posts;")
+	dbr.Exec("DELETE FROM comments;")
 }

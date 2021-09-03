@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +21,7 @@ type Comment struct {
 	Body string
 }
 
-func CommentsProcessing(id int, synch chan int, db *sql.DB){
+func CommentsProcessing(id int, synch chan int, db *gorm.DB){
 	var commentStrings []string
 	var comments []Comment
 	ch := make(chan int)
@@ -59,10 +60,9 @@ func ParseComment(commentStr string, comments *[]Comment){
 	*comments = append(*comments, comment)
 }
 
-func CommentsToDB(comments []Comment, db *sql.DB){
+func CommentsToDB(comments []Comment, db *gorm.DB){
 	for i := range comments {
-		_, err := db.Query("INSERT INTO comments VALUES (?, ?, ?, ?, ?)",
+		db.Exec("INSERT INTO comments VALUES (?, ?, ?, ?, ?)",
 			comments[i].ID, comments[i].PostID, comments[i].Name, comments[i].Email, comments[i].Body)
-		HandleError(err)
 	}
 }
