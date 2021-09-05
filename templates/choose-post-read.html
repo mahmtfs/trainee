@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choose a post</title>
+</head>
+<body>
+    <h1>Select the ID of the post for your comment</h1>
+    <form action="/comment/read" method="GET">
+        <select id="id" name="id">
+            {{range .}}
+            <option value={{.ID}}>
+                {{.ID}}
+            </option>
+            {{end}}
+        </select><br><br>
+        <a href="/">Home</a><br><br>
+        <input type="submit" value="SUBMIT"><br>
+    </form>
+</body>
+</html>

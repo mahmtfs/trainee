@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete a post</title>
+</head>
+<body>
+<h1>Choose a comment to delete:</h1>
+<form action="/comment/deleted/" method="GET">
+    <input type="submit" value="SUBMIT"><br><br>
+    <a href="/">Home</a><br><br>
+    {{range .}}
+    <input name="option" type="radio" value="{{.ID}}">{{.}}<br><br>
+    {{end}}
+</form>
+</body>
+</html>

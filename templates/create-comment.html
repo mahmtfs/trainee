@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create a comment</title>
+</head>
+<body>
+    <h1>Enter your comment info for the post №{{.}}:</h1><br>
+    <form action="/comment/created" method="GET">
+        <label for="postID">Post ID:</label><br><br>
+        <input type="number" id="postID" name="postID" value={{.}} readonly><br><br>
+        <label for="name">Name:</label><br><br>
+        <input type="text" id="name" name="name"><br><br>
+        <label for="email">Email:</label><br><br>
+        <input type="email" id="email" name="email"><br><br>
+        <label for="body">Post:</label><br><br>
+        <textarea id="body" name="body"></textarea><br><br>
+        <input type="submit" value="POST"><br><br>
+    </form>
+</body>
+</html>

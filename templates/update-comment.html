@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update a post</title>
+</head>
+<body>
+<h1>You are updating the comment №{{.ID}}:</h1><br>
+<form action="/comment/updateD/" method="GET">
+    <label for="id">ID:</label><br><br>
+    <input type="number" id="id" name="id" value={{.ID}} readonly><br><br>
+    <label for="postID">Post ID:</label><br><br>
+    <input type="number" id="postID" name="postID" value={{.PostID}} readonly><br><br>
+    <label for="body">Post:</label><br><br>
+    <textarea id="body" name="body">{{.Body}}</textarea><br><br>
+    <input type="submit" value="UPDATE"><br><br>
+</form>
+</body>
+</html>

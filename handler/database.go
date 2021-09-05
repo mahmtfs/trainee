@@ -18,7 +18,4 @@ func GetDB(db **gorm.DB){
 	HandleError(err)
 	*db, err = gorm.Open(os.Getenv("DbDriver"), os.Getenv("DataSource"))
 	HandleError(err)
-	dbr := *db
-	dbr.Exec("DELETE FROM posts;")
-	dbr.Exec("DELETE FROM comments;")
 }
