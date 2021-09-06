@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
-	"html/template"
+	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -23,8 +23,7 @@ type Comment struct {
 	Body string
 }
 
-func CreateChoosePost(w http.ResponseWriter, r *http.Request){
-	t := template.Must(template.ParseFiles("templates/choose-post-create.html"))
+func CreateChoosePost(c echo.Context) error{
 	var db *gorm.DB
 	posts := []Post{}
 	post := Post{}
@@ -40,34 +39,31 @@ func CreateChoosePost(w http.ResponseWriter, r *http.Request){
 		posts = append(posts, post)
 	}
 	db.Close()
-	t.Execute(w, posts)
+	return c.Render(302, "choose-post-create.html", posts)
 }
 
-func CreateCommentHandler(w http.ResponseWriter, r *http.Request){
-	r.ParseForm()
-	t := template.Must(template.ParseFiles("templates/create-comment.html"))
-	postID, _ := strconv.Atoi(r.Form.Get("id"))
-	t.Execute(w, postID)
+func CreateCommentHandler(c echo.Context) error{
+	postID, _ := strconv.Atoi(c.FormValue("id"))
+	return c.Render(302, "create-comment.html", postID)
 }
 
-func (comment Comment) Create (w http.ResponseWriter, r *http.Request){
+func CreateComment (c echo.Context) error{
 	var db *gorm.DB
+	comment := Comment{}
 	GetDB(&db)
 	db.Last(&comment)
-	r.ParseForm()
 	comment.ID+=1
-	comment.PostID, _ = strconv.Atoi(r.Form.Get("postID"))
-	comment.Name = r.Form.Get("name")
-	comment.Email = r.Form.Get("email")
-	comment.Body = r.Form.Get("body")
+	comment.PostID, _ = strconv.Atoi(c.FormValue("postID"))
+	comment.Name = c.FormValue("name")
+	comment.Email = c.FormValue("email")
+	comment.Body = c.FormValue("body")
 	db.Exec("INSERT INTO comments VALUES (?, ?, ?, ?, ?);",
 		comment.ID, comment.PostID, comment.Name, comment.Email, comment.Body)
 	db.Close()
-	http.Redirect(w, r, "/", 302)
+	return c.Redirect(302, "/")
 }
 
-func ReadChoosePost(w http.ResponseWriter, r *http.Request){
-	t := template.Must(template.ParseFiles("templates/choose-post-read.html"))
+func ReadChoosePost(c echo.Context) error{
 	var db *gorm.DB
 	posts := []Post{}
 	post := Post{}
@@ -83,13 +79,11 @@ func ReadChoosePost(w http.ResponseWriter, r *http.Request){
 		posts = append(posts, post)
 	}
 	db.Close()
-	t.Execute(w, posts)
+	return c.Render(302, "choose-post-read.html", posts)
 }
 
-func ReadCommentHandler(w http.ResponseWriter, r *http.Request){
-	r.ParseForm()
-	t := template.Must(template.ParseFiles("templates/read-comment.html"))
-	postID, _ := strconv.Atoi(r.Form.Get("id"))
+func ReadCommentHandler(c echo.Context) error{
+	postID, _ := strconv.Atoi(c.FormValue("id"))
 	type Data struct{
 		PostID int
 		JSONData string
@@ -97,16 +91,15 @@ func ReadCommentHandler(w http.ResponseWriter, r *http.Request){
 	}
 	DataHTML := Data{}
 	DataHTML.PostID = postID
-	t.Execute(w, DataHTML)
+	return c.Render(302, "read-comment.html", DataHTML)
 }
 
-func (comment Comment) Read (w http.ResponseWriter, r *http.Request){
+func ReadComment (c echo.Context) error{
 	var db *gorm.DB
-	t := template.Must(template.ParseFiles("templates/read-comment.html"))
+	comment := Comment{}
 	GetDB(&db)
-	r.ParseForm()
-	comment.ID, _ = strconv.Atoi(r.Form.Get("id"))
-	comment.PostID, _ = strconv.Atoi(r.Form.Get("postID"))
+	comment.ID, _ = strconv.Atoi(c.FormValue("id"))
+	comment.PostID, _ = strconv.Atoi(c.FormValue("postID"))
 	db.Where("id = ? AND post_id= ?", comment.ID, comment.PostID).Find(&comment)
 	type Data struct{
 		PostID int
@@ -121,10 +114,10 @@ func (comment Comment) Read (w http.ResponseWriter, r *http.Request){
 	DataHTML.JSONData = string(JSONData)
 	DataHTML.XMLData = string(XMLData)
 	db.Close()
-	t.Execute(w, DataHTML)
+	return c.Render(302, "read-comment.html", DataHTML)
 }
 
-func FromCommentUpdateToHomeHandler(w http.ResponseWriter, r *http.Request){
+func FromCommentUpdateToHomeHandler(c echo.Context) error{
 	var db *gorm.DB
 	GetDB(&db)
 	comments := []Comment{}
@@ -139,10 +132,9 @@ func FromCommentUpdateToHomeHandler(w http.ResponseWriter, r *http.Request){
 		db.Where("id = ?", i).Find(&comment)
 		comments = append(comments, comment)
 	}
-	r.ParseForm()
-	comment.ID, _ = strconv.Atoi(r.Form.Get("id"))
-	comment.PostID, _ = strconv.Atoi(r.Form.Get("postID"))
-	comment.Body = r.Form.Get("body")
+	comment.ID, _ = strconv.Atoi(c.FormValue("id"))
+	comment.PostID, _ = strconv.Atoi(c.FormValue("postID"))
+	comment.Body = c.FormValue("body")
 	db.Exec("DELETE FROM comments;")
 	for i:=0; i < len(comments); i++{
 		if comments[i].ID == comment.ID{
@@ -152,11 +144,10 @@ func FromCommentUpdateToHomeHandler(w http.ResponseWriter, r *http.Request){
 			comments[i].ID, comments[i].PostID, comments[i].Name, comments[i].Email, comments[i].Body)
 	}
 	db.Close()
-	http.Redirect(w, r, "/", 302)
+	return c.Redirect( 302, "/")
 }
 
-func UpdateChoosePost(w http.ResponseWriter, r *http.Request){
-	t := template.Must(template.ParseFiles("templates/choose-post-update.html"))
+func UpdateChoosePost(c echo.Context) error{
 	var db *gorm.DB
 	posts := []Post{}
 	post := Post{}
@@ -172,23 +163,20 @@ func UpdateChoosePost(w http.ResponseWriter, r *http.Request){
 		posts = append(posts, post)
 	}
 	db.Close()
-	t.Execute(w, posts)
+	return c.Render(302, "choose-post-update.html", posts)
 }
 
-func UpdateCommentHandler(w http.ResponseWriter, r *http.Request){
-	r.ParseForm()
-	t := template.Must(template.ParseFiles("templates/update-comment-get.html"))
-	postID, _ := strconv.Atoi(r.Form.Get("id"))
-	t.Execute(w, postID)
+func UpdateCommentHandler(c echo.Context) error{
+	postID, _ := strconv.Atoi(c.FormValue("id"))
+	return c.Render(302, "update-comment-get.html", postID)
 }
 
-func (comment Comment) Update(w http.ResponseWriter, r *http.Request){
+func UpdateComment (c echo.Context) error{
 	var db *gorm.DB
+	comment := Comment{}
 	GetDB(&db)
-	t := template.Must(template.ParseFiles("templates/update-comment.html"))
-	r.ParseForm()
-	comment.ID, _ = strconv.Atoi(r.Form.Get("id"))
-	comment.PostID, _ = strconv.Atoi(r.Form.Get("postID"))
+	comment.ID, _ = strconv.Atoi(c.FormValue("id"))
+	comment.PostID, _ = strconv.Atoi(c.FormValue("postID"))
 	db.Where("id = ? AND post_id = ?", comment.ID, comment.PostID).Find(&comment)
 	type Data struct {
 		ID int
@@ -200,11 +188,10 @@ func (comment Comment) Update(w http.ResponseWriter, r *http.Request){
 	DataHTML.PostID = comment.PostID
 	DataHTML.Body = comment.Body
 	db.Close()
-	t.Execute(w, DataHTML)
+	return c.Render(302, "update-comment.html", DataHTML)
 }
 
-func DeleteChoosePost(w http.ResponseWriter, r *http.Request){
-	t := template.Must(template.ParseFiles("templates/choose-post-delete.html"))
+func DeleteChoosePost(c echo.Context) error{
 	var db *gorm.DB
 	posts := []Post{}
 	post := Post{}
@@ -220,12 +207,10 @@ func DeleteChoosePost(w http.ResponseWriter, r *http.Request){
 		posts = append(posts, post)
 	}
 	db.Close()
-	t.Execute(w, posts)
+	return c.Render(302, "choose-post-delete.html", posts)
 }
 
-func DeleteCommentHandler(w http.ResponseWriter, r *http.Request){
-	r.ParseForm()
-	t := template.Must(template.ParseFiles("templates/delete-comment.html"))
+func DeleteCommentHandler(c echo.Context) error{
 	var db *gorm.DB
 	comments := []Comment{}
 	comment := Comment{}
@@ -235,7 +220,7 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request){
 	comment = Comment{}
 	db.Last(&comment)
 	idLast := comment.ID
-	postID, _ := strconv.Atoi(r.Form.Get("id"))
+	postID, _ := strconv.Atoi(c.FormValue("id"))
 	for i:=idFirst; i <= idLast; i++{
 		comment = Comment{}
 		db.Where("id = ? AND post_id = ?", i, postID).Find(&comment)
@@ -244,15 +229,14 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request){
 		}
 	}
 	db.Close()
-	t.Execute(w, comments)
+	return c.Render(302, "delete-comment.html", comments)
 }
 
-func (comment Comment) Delete(w http.ResponseWriter, r *http.Request){
-	r.ParseForm()
-	DeleteID, _ := strconv.Atoi(r.Form.Get("option"))
+func DeleteComment (c echo.Context) error{
+	DeleteID, _ := strconv.Atoi(c.FormValue("option"))
 	var db *gorm.DB
 	comments := []Comment{}
-	comment = Comment{}
+	comment := Comment{}
 	GetDB(&db)
 	db.First(&comment)
 	idFirst := comment.ID
@@ -278,7 +262,7 @@ func (comment Comment) Delete(w http.ResponseWriter, r *http.Request){
 			comments[i].ID, comments[i].PostID, comments[i].Name, comments[i].Email, comments[i].Body)
 	}
 	db.Close()
-	http.Redirect(w, r, "/", 302)
+	return c.Redirect(302, "/")
 }
 
 func CommentsProcessing(id int, synch chan int, db *gorm.DB){

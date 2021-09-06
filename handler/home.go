@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"html/template"
+	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request){
-	t, _ := template.ParseFiles("templates/index.html")
-	err := t.Execute(w, nil)
-	HandleError(err)
+func HomeHandler(c echo.Context) error{
+	return c.Render(http.StatusOK, "index.html", nil)
 }

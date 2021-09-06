@@ -3,10 +3,18 @@ package main
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"net/http"
+	"github.com/labstack/echo/v4"
+	"html/template"
+	"io"
 	"strings"
 	"traineeProject/handler"
 )
+
+type Renderer struct {
+	template *template.Template
+	debug bool
+	location string
+}
 
 func main(){
 	var db *gorm.DB
@@ -29,28 +37,50 @@ func main(){
 	}
 	db.Close()
 	fmt.Println("Starting the server...")
-	http.HandleFunc("/", handler.HomeHandler)
-	http.HandleFunc("/post/create/", handler.PostCreateHandler)
-	http.HandleFunc("/post/created/", handler.Post{}.Create)
-	http.HandleFunc("/post/read/", handler.PostReadHandler)
-	http.HandleFunc("/post/reaD/", handler.Post{}.Read)
-	http.HandleFunc("/post/update/", handler.PostUpdateHandler)
-	http.HandleFunc("/post/updated/", handler.Post{}.Update)
-	http.HandleFunc("/post/updateD/", handler.FromPostUpdateToHomeHandler)
-	http.HandleFunc("/post/delete/", handler.DeletePostHandler)
-	http.HandleFunc("/post/deleted/", handler.Post{}.Delete)
-	http.HandleFunc("/comment/create/choosepost/", handler.CreateChoosePost)
-	http.HandleFunc("/comment/create/", handler.CreateCommentHandler)
-	http.HandleFunc("/comment/created/", handler.Comment{}.Create)
-	http.HandleFunc("/comment/read/choosepost/", handler.ReadChoosePost)
-	http.HandleFunc("/comment/read/", handler.ReadCommentHandler)
-	http.HandleFunc("/comment/reaD/", handler.Comment{}.Read)
-	http.HandleFunc("/comment/update/choosepost/", handler.UpdateChoosePost)
-	http.HandleFunc("/comment/update/", handler.UpdateCommentHandler)
-	http.HandleFunc("/comment/updated/", handler.Comment{}.Update)
-	http.HandleFunc("/comment/updateD/", handler.FromCommentUpdateToHomeHandler)
-	http.HandleFunc("/comment/delete/choosepost/", handler.DeleteChoosePost)
-	http.HandleFunc("/comment/delete/", handler.DeleteCommentHandler)
-	http.HandleFunc("/comment/deleted/", handler.Comment{}.Delete)
-	http.ListenAndServe(":8000", nil)
+	e := echo.New()
+	e.Renderer = NewRenderer("templates/*.html", true)
+	e.GET("/", handler.HomeHandler)
+	e.GET("/post/create/", handler.PostCreateHandler)
+	e.GET("/post/created/", handler.CreatePost)
+	e.GET("/post/read/", handler.PostReadHandler)
+	e.GET("/post/reaD/", handler.ReadPost)
+	e.GET("/post/update/", handler.PostUpdateHandler)
+	e.GET("/post/updated/", handler.UpdatePost)
+	e.GET("/post/updateD/", handler.FromPostUpdateToHomeHandler)
+	e.GET("/post/delete/", handler.DeletePostHandler)
+	e.GET("/post/deleted/", handler.DeletePost)
+	e.GET("/comment/create/choosepost/", handler.CreateChoosePost)
+	e.GET("/comment/create/", handler.CreateCommentHandler)
+	e.GET("/comment/created/", handler.CreateComment)
+	e.GET("/comment/read/choosepost/", handler.ReadChoosePost)
+	e.GET("/comment/read/", handler.ReadCommentHandler)
+	e.GET("/comment/reaD/", handler.ReadComment)
+	e.GET("/comment/update/choosepost/", handler.UpdateChoosePost)
+	e.GET("/comment/update/", handler.UpdateCommentHandler)
+	e.GET("comment/updated/", handler.UpdateComment)
+	e.GET("comment/updateD/", handler.FromCommentUpdateToHomeHandler)
+	e.GET("/comment/delete/choosepost/", handler.DeleteChoosePost)
+	e.GET("/comment/delete/", handler.DeleteCommentHandler)
+	e.GET("/comment/deleted/", handler.DeleteComment)
+	e.Start(":8000")
+}
+
+func (t *Renderer) ReloadTemplates(){
+	t.template = template.Must(template.ParseGlob(t.location))
+}
+
+func (t *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error{
+	if t.debug{
+		t.ReloadTemplates()
+	}
+	return t.template.ExecuteTemplate(w, name, data)
+}
+
+func NewRenderer(location string, debug bool) *Renderer{
+	tpl := new(Renderer)
+	tpl.location = location
+	tpl.debug = debug
+
+	tpl.ReloadTemplates()
+	return tpl
 }

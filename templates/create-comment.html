@@ -6,7 +6,7 @@
 </head>
 <body>
     <h1>Enter your comment info for the post №{{.}}:</h1><br>
-    <form action="/comment/created" method="GET">
+    <form action="/comment/created/" method="GET">
         <label for="postID">Post ID:</label><br><br>
         <input type="number" id="postID" name="postID" value={{.}} readonly><br><br>
         <label for="name">Name:</label><br><br>

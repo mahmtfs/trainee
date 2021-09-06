@@ -6,7 +6,7 @@
 </head>
 <body>
 <h1>Select the ID of the post for your comment</h1>
-<form action="/comment/create" method="GET">
+<form action="/comment/create/" method="GET">
     <select id="id" name="id">
         {{range .}}
         <option value={{.ID}}>
